@@ -1,6 +1,8 @@
 Computational Drug Discovery Workflow
 This repository provides a step-by-step guide and automation scripts for a basic virtual screening workflow. It demonstrates the process of preparing a protein and a ligand, performing molecular docking, and analyzing the results, a fundamental skill set in modern drug discovery.
 
+-----
+
 1. Preparation
 This section covers the download and preparation of the protein and ligand files for docking.
     • Protein Acquisition: Download the protein structure for HIV-1 Protease (PDB ID: 1HPV) from the `Protein Data Bank (PDB).` It is recommended to download the file in the modern PDBx/mmCIF format.
@@ -18,6 +20,7 @@ This section covers the download and preparation of the protein and ligand files
     • File Conversion: Use the Open Babel command-line tool to prepare the files for AutoDock Vina. This converts them to the PDBQT format, adds hydrogens, and removes heteroatoms.
         ◦ Protein: obabel -i cif 1HPV.cif -o pdbqt -O 1hpv.pdbqt -xr
         ◦ Ligand: obabel -i sdf darunavir.sdf -o pdbqt -O darunavir.pdbqt --gen3d -p
+----
 
 2. Molecular Docking
 This section covers the actual docking simulation using AutoDock Vina.
@@ -36,6 +39,8 @@ size_z = 20
     • Vina -receptor 1hpv.pdbqt --ligand darunavir.pdbqt --config config.txt
         ◦ If your ligand file contains multiple models, use vina_split first: vina_split --input darunavir.pdbqt
         ◦ Then, run the docking command: vina --receptor 1hpv.pdbqt --ligand darunavir_ligand_1.pdbqt --config config.txt
+        
+----
 
 3. Analysis
 The final step is to analyze the results to understand the protein-ligand interactions.
