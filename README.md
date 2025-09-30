@@ -28,20 +28,23 @@ This repository provides a step-by-step guide and automation scripts for a basic
 2. ### Molecular Docking
 * This section covers the actual docking simulation using AutoDock Vina.
     • Configuration: Create a config.txt file to specify the docking box.
-receptor = 1hpv.pdbqt
-ligand = darunavir.pdbqt
+```
+* receptor = 1hpv.pdbqt
+* ligand = darunavir.pdbqt
 
-center_x = [your x coordinate]
-center_y = [your y coordinate]
-center_z = [your z coordinate]
+* center_x = [your x coordinate]
+* center_y = [your y coordinate]
+* center_z = [your z coordinate]
 
-size_x = 20
-size_y = 20
-size_z = 20
-    • Run Docking: Execute the docking simulation from the terminal.
-    • Vina -receptor 1hpv.pdbqt --ligand darunavir.pdbqt --config config.txt
-        ◦ If your ligand file contains multiple models, use vina_split first: vina_split --input darunavir.pdbqt
-        ◦ Then, run the docking command: vina --receptor 1hpv.pdbqt --ligand darunavir_ligand_1.pdbqt --config config.txt
+* size_x = 20
+* size_y = 20
+* size_z = 20
+```
+
+   * Run Docking: Execute the docking simulation from the terminal.
+   * `Vina -receptor 1hpv.pdbqt --ligand darunavir.pdbqt --config config.txt`
+        * If your ligand file contains multiple models, use vina_split first: ` --input darunavir.pdbqt`
+        * Then, run the docking command: `vina --receptor 1hpv.pdbqt --ligand darunavir_ligand_1.pdbqt --config config.txt`
         
 ----
 
