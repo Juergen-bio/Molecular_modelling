@@ -21,8 +21,9 @@ This repository provides a step-by-step guide and automation scripts for a basic
                 • Type define `centroid #1.1.1` in the command line (#1.1.1 is the largest cavity).
                
     * **File Conversion:** Use the Open Babel command-line tool to prepare the files for AutoDock Vina. This converts them to the PDBQT format, adds hydrogens, and removes heteroatoms.
-        ◦ Protein: `obabel -i cif 1HPV.cif -o pdbqt -O 1hpv.pdbqt -xr`
-        ◦ Ligand: `obabel -i sdf darunavir.sdf -o pdbqt -O darunavir.pdbqt --gen3d -p`
+       * ◦ Protein: `obabel -i cif 1HPV.cif -o pdbqt -O 1hpv.pdbqt -xr`
+       * ◦ Ligand: `obabel -i sdf darunavir_2d.sdf -O darunavir.sdf -h --gen3d --minimize`
+         *         `mk_prepare_ligand.py -i darunavir.sdf -o darunavir.pdbqt`
 ----
 
 2. ### Molecular Docking
@@ -42,7 +43,7 @@ This repository provides a step-by-step guide and automation scripts for a basic
 ```
 
    * Run Docking: Execute the docking simulation from the terminal.
-   * `Vina -receptor 1hpv.pdbqt --ligand darunavir.pdbqt --config config.txt`
+   * `Vina -receptor 1hpv.pdbqt --ligand darunavir.pdbqt --config config.txt --out result.pdbqt`
         * If your ligand file contains multiple models, use vina_split first: ` --input darunavir.pdbqt`
         * Then, run the docking command: `vina --receptor 1hpv.pdbqt --ligand darunavir_ligand_1.pdbqt --config config.txt`
         
