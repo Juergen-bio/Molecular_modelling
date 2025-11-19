@@ -1,10 +1,22 @@
-receptor=1hpv.pdbqt
-ligand=darunavir.pdbqt
+receptor = 
+ligand   = 
 
-center_x=9.56
-center_y=16.51
-center_z=9.07
+center_x = 
+center_y = 
+center_z = 
 
-size_x=20
-size_y=20
-size_z=20
+size_x   = 20
+size_y   = 20
+size_z   = 20
+
+exhaustiveness = 16
+cpu            = 4 
+num_modes      = 8
+energy_range   = 3
+
+# seed = 12345           # Uncomment for reproducibilit
+# again just make sure the cpu matches 'nproc'
+
+
+
+
