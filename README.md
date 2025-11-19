@@ -1,64 +1,128 @@
-## Computational Drug Discovery Workflow
-This repository provides a step-by-step guide and automation scripts for a basic virtual screening workflow. It demonstrates the process of preparing a protein and a ligand, performing molecular docking, and analyzing the results, a fundamental skill set in modern drug discovery.
+##  AutoDock Vina Workflow: Receptor & Ligand Preparation (ChimeraX / Open Babel / Meeko)
+
+This guide outlines the standard steps for preparing a single receptor and ligand for docking using **AutoDock Vina**, leveraging ChimeraX for PDB preparation and the **Meeko** (`mk_prepare_*.py`) suite for PDBQT conversion.
 
 -----
 
-1. ### Preparation
-* This section covers the download and preparation of the protein and ligand files for docking.
-    * **Protein Acquisition:** Download the protein structure for HIV-1 Protease (PDB ID: 1HPV) from the `Protein Data Bank (PDB).` It is recommended to download the file in the modern PDBx/mmCIF format.
-      
-    * **Ligand Acquisition:** Download the `Darunavir` ligand in SDF format form `pubchem.`
-      
-    * **Protein Preparation:**
-        * Open the protein file in a molecular visualization tool like ChimeraX. `chimerax protein_name`
-        * Delete the co-crystallized ligand from the active site. `delete sel`
-        * Find the active site coordinates for docking. Two methods are outlined:
-            1. **Ligand-Based (Recommended):** Use the original ligand's position to define the center.
-                • In ChimeraX, type define `centroid sel` after selecting the ligand.
-                • Copy the XYZ coordinates from the log.
-            2. **Cavity-Based:** Use ChimeraX's built-in tool to find the largest cavity.
-                • Use the Tools > General > Find Cavities menu.
-                • Type define `centroid #1.1.1` in the command line (#1.1.1 is the largest cavity).
-               
-    * **File Conversion:** Use the Open Babel command-line tool to prepare the files for AutoDock Vina. This converts them to the PDBQT format, adds hydrogens, and removes heteroatoms.
-       * ◦ Protein: `obabel -i cif 1HPV.cif -o pdbqt -O 1hpv.pdbqt -xr`
-       * ◦ Ligand: `obabel -i sdf darunavir_2d.sdf -O darunavir.sdf -h --gen3d --minimize`
-         *         `mk_prepare_ligand.py -i darunavir.sdf -o darunavir.pdbqt`
-----
+### 1\.  Receptor Preparation using ChimeraX
 
-2. ### Molecular Docking
-* This section covers the actual docking simulation using AutoDock Vina.
-    • Configuration: Create a config.txt file to specify the docking box.
+These steps ensure your PDB is clean, protonated, and ready for PDBQT conversion.
+
+  * **Load the Protein:** Load your protein structure into ChimeraX.
+  * **Identify & Measure the Active Site:**
+      * If you have a co-crystallized ligand:
+        ```bash
+        select ligand
+        measure center sel # Get coordinates for config.txt
+        del sel            # Delete the co-crystallized ligand
+        ```
+      * If the active site is unknown:
+        ```bash
+        # Identify pockets for blind docking center estimation
+        find cavity
+        ```
+  * **Define Centroid (Optional):** If you are defining a docking box based on specific residues:
+    ```bash
+    define centroid #1.1.1 # Define a geometric center for a residue (e.g., residue 1.1.1)
+    ```
+  * **Clean and Protonate:**
+    ```bash
+    delete solvent # Remove water molecules
+    addh           # Add hydrogens (ChimeraX defaults to polar-only for docking prep)
+    ```
+  * **Save the Cleaned Structure:**
+    ```bash
+    save protein.pdb #1.1 # Save the cleaned model (assuming model 1, submodel 1)
+    ```
+
+-----
+
+### 2\.  Receptor PDBQT Conversion (Meeko)
+
+Use `mk_prepare_receptor.py` to convert the cleaned PDB to Vina-compatible PDBQT format.
+
+| Command | Description |
+| :--- | :--- |
+| `mk_prepare_receptor.py -i protein.pdb -o protein -p` | Standard, simple conversion. |
+| `mk_prepare_receptor.py -i gyrase.pdb --allow_bad_res --default_altloc A -o gyrase -p` | Handles specific issues like alternate conformers (`--default_altloc A`) and non-standard residues. |
+| `mk_prepare_receptor.py -i receptor.pdb -o my_receptor -p -f A:101 A:230 A:35` | **Flexible Docking:** Uses the `-f` flag to specify residues (Chain:ResNum) to be treated as flexible during docking. |
+
+-----
+
+### 3\.  Ligand Preparation (Open Babel & Meeko)
+
+This involves generating 3D structures, optimizing geometry, and converting to PDBQT.
+
+#### A. Optimization and 3D Conversion (Open Babel)
+
+  * **Quick 3D Generation & Minimization:**
+    ```bash
+    obabel -i sdf ligand_2d.sdf -O ligand.sdf -h --gen3d --minimize
+    ```
+  * **Recommended Force Field Optimization:** For better geometric accuracy, use a force field and defined steps:
+    ```bash
+    obabel -i sdf quercetin_2d.sdf -O quercetin.sdf -h --gen3d --minimize --ff MMFF94 --steps 500
+    ```
+    > **Note:** `--minimize` in Open Babel is okay for small molecules, but running an **MMFF94 optimization** (`--ff MMFF94 --steps 500`) yields better starting geometries.
+
+#### B. Ligand PDBQT Conversion (Meeko)
+
+  * **Standard Conversion:**
+    ```bash
+    mk_prepare_ligand.py -i quercetin.sdf -o quercetin.pdbqt
+    ```
+  * **Generating from SMILES (Example: Phosphate Ion):**
+    1.  **Generate 3D MOL2 directly from SMILES (with protonation at pH 7.4):**
+        ```bash
+        echo 'O=P(O)(O)[O-]' | obabel -ismi -o mol2 -O phosphate.mol2 -p 7.4 --gen3d
+        ```
+    2.  **Convert MOL2 to PDBQT:**
+        ```bash
+        mk_prepare_ligand.py -i phosphate.mol2 -o phosphate.pdbqt
+        ```
+
+#### C. Charge Validation (Optional but Recommended)
+
+If you have a custom script (`check_charge.py`) to verify PDBQT charges:
+
+```bash
+chmod +x check_charge.py
+./check_charge.py phosphate.pdbqt
 ```
-* receptor = 1hpv.pdbqt
-* ligand = darunavir.pdbqt
 
-* center_x = [your x coordinate]
-* center_y = [your y coordinate]
-* center_z = [your z coordinate]
+-----
 
-* size_x = 20
-* size_y = 20
-* size_z = 20
+### 4\.  Docking Configuration and Execution
+
+#### A. `config.txt` File
+
+Create a `config.txt` file containing the grid box parameters derived from your ChimeraX measurements.
+
+```text
+# Example: Ensure all values are CLEAN (no trailing comments)
+
+center_x = 9.92
+center_y = 16.23
+center_z = 8.83
+
+size_x = 20
+size_y = 20
+size_z = 20
+
+exhaustiveness = 8
+cpu = 8          # Must match the number from 'nproc' run on terminal
+num_modes = 9
+energy_range = 3
 ```
 
-   * Run Docking: Execute the docking simulation from the terminal.
-   * `Vina -receptor 1hpv.pdbqt --ligand darunavir.pdbqt --config config.txt --out result.pdbqt`
-        * If your ligand file contains multiple models, use vina_split first: ` --input darunavir.pdbqt`
-        * Then, run the docking command: `vina --receptor 1hpv.pdbqt --ligand darunavir_ligand_1.pdbqt --config config.txt`
-        
-----
+#### B. Run Vina
 
-3. ### Analysis
-* The final step is to analyze the results to understand the protein-ligand interactions.
-    * **Visualize Poses:** Open the prepared protein (the one without the original ligand) and the Vina output file in ChimeraX.
-        ◦ `chimerax 1hpv.pdb darunavir_ligand_1_out.pdbqt`
-      
-    * **Select Poses:** The output file contains multiple poses. You can select them for visualization using the Model Panel or command line.
-        * To select the best pose (usually the first one): `select #2.1`
-        * To show only the selected pose: `hide #2.2-`
-      
-    * **Analyze Interactions:** Use ChimeraX to identify key interactions like hydrogen bonds.
-        * To select residues within 5 Å of the ligand: `sel zone #2.1&protein distance 5`
-        * To find hydrogen bonds within the selection: `hbonds sel`
-        * To refine the H-bond visualization: `hbonds #2.1 #1 color yellow intermodel true`
+Execute the docking run, replacing the input/output filenames as needed:
+
+```bash
+vina --receptor phytase_receptor.pdbqt \
+     --ligand phosphate_ligand.pdbqt \
+     --config config.txt \
+     --out docking_results.pdbqt \
+     --log docking_log.txt
+```
