@@ -126,3 +126,13 @@ vina --receptor phytase_receptor.pdbqt \
      --out docking_results.pdbqt \
      --log docking_log.txt
 ```
+
+-----
+
+## 5\. Advanced: High-Throughput Batch Docking
+
+For users familiar with command-line scripting and requiring the docking of **multiple ligands** against a single receptor, a high-throughput pipeline is provided.
+
+* **Script Location:** The robust batch script is located in the **`automate/`** subdirectory: `automate/vina_batch.sh`.
+* **Usage:** Place all your ligand files (e.g., `.sdf`) into the `automate/ligands/` folder, ensure the main receptor is in `atomate/auprotein.pdb`, also config.txt (`automate/config.txt`) and execute the batch script. preparation, docking, and affinity summarization automatically.
+* **Summary Output:** Results are compiled into `results/batch_results/vina_summary.csv`.
